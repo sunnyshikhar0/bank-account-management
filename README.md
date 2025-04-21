@@ -1,3 +1,78 @@
+# Bank Account Management Project Structure and Workflow
+
+## Project Structure
+
+The project follows a feature-based architecture using React with Redux:
+
+## Application Workflow
+
+1. **Initialization**:
+
+   - Application starts with index.js rendering the `App` component
+   - Redux store is initialized with account and customer slices
+   - No customer exists initially (`fullName === ""`)
+
+2. **Customer Registration**:
+
+   - App.js conditionally renders the `CreateCustomer` component
+   - User enters name and ID, clicks "Create new customer"
+   - `createCustomer` action is dispatched to the Redux store
+   - Customer state is updated in Redux
+
+3. **Banking Interface**:
+
+   - Once a customer exists, App.js renders:
+     - `Customer` component (welcome message)
+     - `AccountOperations` component (transaction forms)
+     - `BalanceDisplay` component (current balance)
+
+4. **Account Operations**:
+   - **Deposit**: Add money with optional currency conversion
+   - **Withdraw**: Remove money from balance
+   - **Request Loan**: Get a loan and add to balance
+   - **Pay Loan**: Deduct loan amount from balance and clear loan
+
+## State Management
+
+The application uses Redux with the following state structure:
+
+```javascript
+{
+  account: {
+    balance: 0,         // Current account balance
+    loan: 0,            // Current loan amount (0 if no active loan)
+    loanPurpose: "",    // Purpose of the current loan
+    isLoading: false    // Loading state for currency conversion
+  },
+  customer: {
+    fullName: "",       // Customer's full name
+    nationalID: "",     // Customer's ID number
+    createdAt: ""       // Account creation timestamp
+  }
+}
+```
+
+## Redux Evolution
+
+The project demonstrates three stages of Redux implementation:
+
+1. **Vanilla Redux** (`store-v1.js`)
+
+   - Manual reducers with switch/case
+   - Explicit action creators
+
+2. **Redux with Middleware** (`store-v2.js`)
+
+   - Adds thunk for async operations
+   - Adds Redux DevTools integration
+
+3. **Redux Toolkit** (`store.js`)
+   - Uses `createSlice` for simplified state management
+   - Automatic action creation
+   - Simpler immutable updates with Immer
+
+This evolution showcases modern Redux best practices.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
