@@ -17,51 +17,41 @@ import { useDispatch } from "react-redux";
  *    AccountOperations and BalanceDisplay components
  */
 function CreateCustomer() {
-  // Local state for form inputs
   const [fullName, setFullName] = useState("");
   const [nationalId, setNationalId] = useState("");
-
-  // Get the dispatch function to send actions to Redux store
   const dispatch = useDispatch();
 
-  /**
-   * Form submission handler
-   * - Validates that both fields have values
-   * - Dispatches createCustomer action to the Redux store
-   * - createCustomer action is defined in customerSlice.js and includes:
-   *   - fullName: Customer's full name
-   *   - nationalId: Customer's national ID
-   *   - createdAt: Automatically generated timestamp
-   */
   function handleClick() {
     if (!fullName || !nationalId) return;
     dispatch(createCustomer(fullName, nationalId));
   }
 
   return (
-    <div>
+    <div className="panel">
       <h2>Create new customer</h2>
-      <div className="inputs">
-        {/* Full name input field */}
-        <div>
+      <div className="form-grid">
+        <div className="form-group">
           <label>Customer full name</label>
           <input
             value={fullName}
+            placeholder="Jane Doe"
             onChange={(e) => setFullName(e.target.value)}
           />
         </div>
-
-        {/* National ID input field */}
-        <div>
+        <div className="form-group">
           <label>National ID</label>
           <input
             value={nationalId}
+            placeholder="ID number"
             onChange={(e) => setNationalId(e.target.value)}
           />
         </div>
-
-        {/* Submit button - triggers customer creation */}
-        <button onClick={handleClick}>Create new customer</button>
+        <div className="form-group">
+          <label>&nbsp;</label>
+          <button onClick={handleClick} disabled={!fullName || !nationalId}>
+            Create account
+          </button>
+        </div>
       </div>
     </div>
   );

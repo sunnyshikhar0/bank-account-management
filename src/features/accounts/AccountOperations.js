@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 // Import Redux actions from accountSlice that will be dispatched
 import { deposit, payLoan, requestLoan, withdraw } from "./accountSlice";
+import {addTransaction} from "./transactionSlice";
 
 /**
  * Component that handles all banking operations:
@@ -28,6 +29,8 @@ function AccountOperations() {
     isLoading, // Used to show loading state during currency conversion
   } = useSelector((store) => store.account);
 
+  // Get the current account balance
+  const balance = useSelector((store) => store.account.balance);
   /**
    * Handles the deposit operation
    * - Validates input
@@ -39,6 +42,15 @@ function AccountOperations() {
 
     // deposit action in accountSlice handles currency conversion if needed
     dispatch(deposit(depositAmount, currency));
+    // Add transaction record for deposit
+    dispatch(
+      addTransaction({
+        type: "deposit",
+        amount: depositAmount,
+        currency,
+        balanceAfter: balance + Number(depositAmount),
+      }),
+    );
     setDepositAmount("");
     setCurrency("INR");
   }
@@ -53,6 +65,14 @@ function AccountOperations() {
     if (!withdrawalAmount) return;
 
     dispatch(withdraw(withdrawalAmount));
+    dispatch(
+      addTransaction({
+        type: "withdraw",
+        amount: withdrawalAmount,
+        currency: "INR",
+        balanceAfter: balance - Number(withdrawalAmount),
+      }),
+    );
     setWithdrawalAmount("");
   }
 
@@ -66,6 +86,15 @@ function AccountOperations() {
     if (!loanAmount || !loanPurpose) return;
 
     dispatch(requestLoan(loanAmount, loanPurpose));
+    dispatch(
+      addTransaction({
+        type: "loanGranted",
+        amount: loanAmount,
+        currency: "INR",
+        meta: { purpose: loanPurpose },
+        balanceAfter: balance + Number(loanAmount),
+      }),
+    );
     setLoanAmount("");
     setLoanPurpose("");
   }
@@ -78,51 +107,69 @@ function AccountOperations() {
    */
   function handlePayLoan() {
     dispatch(payLoan());
+    dispatch(
+      addTransaction({
+        type: "loanPaid",
+        amount: currentLoan,
+        currency: "INR",
+        meta: { purpose: currentLoanPurpose },
+        balanceAfter: balance - currentLoan,
+      }),
+    );
   }
 
   return (
-    <div>
+    <div className="panel">
       <h2>Your account operations</h2>
-      <div className="inputs">
-        {/* Deposit section with currency conversion */}
-        <div>
+      <div className="form-grid">
+        <div className="form-group">
           <label>Deposit</label>
-          <input
-            type="number"
-            value={depositAmount}
-            onChange={(e) => setDepositAmount(+e.target.value)} // Convert string to number with +
-          />
-          <select
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
+          <div className="form-group inline">
+            <input
+              type="number"
+              value={depositAmount}
+              onChange={(e) => setDepositAmount(+e.target.value)}
+              placeholder="Amount"
+            />
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+            >
+              <option value="INR">INR</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+          <button
+            onClick={handleDeposit}
+            className={isLoading ? "loading" : ""}
+            disabled={isLoading || !depositAmount}
           >
-            <option value="INR">Indian Ruppee</option>
-            <option value="USD">US Dollar</option>
-            <option value="EUR">Euro</option>
-            <option value="GBP">British Pound</option>
-          </select>
-
-          {/* Button text changes based on loading state during currency conversion */}
-          <button onClick={handleDeposit}>
-            {isLoading ? "Converting..." : `Deposit ${depositAmount}`}
+            {isLoading ? "Converting" : `Deposit ₹${depositAmount || 0}`}
           </button>
         </div>
 
-        {/* Withdrawal section */}
-        <div>
+        <div className="form-group">
           <label>Withdraw</label>
-          <input
-            type="number"
-            value={withdrawalAmount}
-            onChange={(e) => setWithdrawalAmount(+e.target.value)}
-          />
-          <button onClick={handleWithdrawal}>
-            Withdraw {withdrawalAmount}
-          </button>
+          <div className="form-group inline">
+            <input
+              type="number"
+              value={withdrawalAmount}
+              placeholder="Amount"
+              onChange={(e) => setWithdrawalAmount(+e.target.value)}
+            />
+            <button
+              onClick={handleWithdrawal}
+              disabled={!withdrawalAmount}
+              className="secondary"
+            >
+              Withdraw ₹{withdrawalAmount || 0}
+            </button>
+          </div>
         </div>
 
-        {/* Loan request section */}
-        <div>
+        <div className="form-group">
           <label>Request loan</label>
           <input
             type="number"
@@ -133,18 +180,27 @@ function AccountOperations() {
           <input
             value={loanPurpose}
             onChange={(e) => setLoanPurpose(e.target.value)}
-            placeholder="Loan purpose"
+            placeholder="Purpose"
           />
-          <button onClick={handleRequestLoan}>Request loan</button>
+          <button
+            onClick={handleRequestLoan}
+            disabled={!loanAmount || !loanPurpose || currentLoan > 0}
+          >
+            {currentLoan > 0 ? "Active loan exists" : "Request loan"}
+          </button>
         </div>
 
-        {/* Loan repayment section - only shown if there is an active loan */}
         {currentLoan > 0 && (
-          <div>
-            <span>
-              Pay back ₹{currentLoan} ({currentLoanPurpose})
-            </span>
-            <button onClick={handlePayLoan}>Pay loan</button>
+          <div className="form-group">
+            <label>Active loan</label>
+            <div className="form-group inline">
+              <span>
+                ₹{currentLoan} ({currentLoanPurpose})
+              </span>
+              <button onClick={handlePayLoan} className="danger">
+                Pay loan
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -153,3 +209,13 @@ function AccountOperations() {
 }
 
 export default AccountOperations;
+
+
+/**
+ * Component that handles all banking operations:
+ * - Depositing money (with currency conversion)
+ * - Withdrawing money
+ * - Requesting loans
+ * - Paying back loans
+ * - Each operation is recorded in transaction history and persisted
+ */

@@ -3,6 +3,7 @@ import Customer from "./features/customers/Customer";
 import AccountOperations from "./features/accounts/AccountOperations";
 import BalanceDisplay from "./features/accounts/BalanceDisplay";
 import { useSelector } from "react-redux";
+import TransactionHistory from "./features/accounts/TransactionHistory";
 
 /**
  * Main application component that controls the overall app flow
@@ -27,18 +28,16 @@ function App() {
   const fullName = useSelector((state) => state.customer.fullName);
 
   return (
-    <div>
+    <div className="app-shell">
       <h1>🏦 The React-Redux Bank ⚛️</h1>
-      {/* Conditional rendering based on customer existence */}
       {fullName === "" ? (
-        // No customer exists → show registration form
         <CreateCustomer />
       ) : (
-        // Customer exists → show banking interface
         <>
           <Customer />
           <AccountOperations />
           <BalanceDisplay />
+          <TransactionHistory />
         </>
       )}
     </div>

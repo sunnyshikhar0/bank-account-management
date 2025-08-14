@@ -16,11 +16,8 @@ import { useSelector } from "react-redux";
  * Note: This is different from CreateCustomer.js which handles the initial registration
  */
 function Customer() {
-  // Access customer's full name from the Redux store
   const customer = useSelector((store) => store.customer.fullName);
-
-  // Return welcome message with customer's name
-  return <h2>👋 Welcome, {customer}</h2>;
+  return <h2 className="welcome">👋 Welcome, {customer}</h2>;
 }
 
 export default Customer;
